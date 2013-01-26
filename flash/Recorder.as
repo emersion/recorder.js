@@ -102,9 +102,8 @@ package
 				playingProgressTimer.reset();
 			}
 			playingProgressTimer = new Timer(250);
-			var that = this;
 			playingProgressTimer.addEventListener(TimerEvent.TIMER, function playingProgressTimerHandler(event:TimerEvent){
-				triggerEvent('playingProgress', that.playDuration());
+				triggerEvent('playingProgress', this.playDuration());
 			});
 			playingProgressTimer.start();
 		}
@@ -213,12 +212,15 @@ package
 		
 		protected function notifyRecordingStarted():void
 		{
+			var numOfChannels:Number = 1;
+			var bufferLength:Number = 2048;
+
 			if(microphoneWasMuted){
 				microphoneWasMuted = false;
 				triggerEvent('hideFlash','');
 			}
 			recordingStartTime = getTimer();
-			triggerEvent('recordingStart', {});
+			triggerEvent('recordingStart', numOfChannels, sampleRate * 1000, bufferLength);
 			logger.log('startRecording');
 			isRecording = true;
 		}
@@ -250,15 +252,22 @@ package
 		
 		protected function recordSampleDataHandler(event:SampleDataEvent):void
 		{	
+			var delimiter = ";";
+			var audioData:String = "";
+
 			while(event.data.bytesAvailable)
 			{	
 				var sample:Number = event.data.readFloat();
 				
 				buffer.writeFloat(sample);
+				audioData += sample.toString() + delimiter;
+
 				if(buffer.length % 40000 == 0){
-					triggerEvent('recordingProgress', recordingDuration(), 	microphone.activityLevel);
-				}	
+					triggerEvent('recordingProgress', recordingDuration(), microphone.activityLevel);
+				}
 			}
+
+			triggerEvent('recordingAudioAvailable', audioData, recordingDuration());
 		}
 		
 		protected function playSampleDataHandler(event:SampleDataEvent):void
@@ -286,9 +295,9 @@ package
 		
 		/* ExternalInterface Communication */
 		
-		protected function triggerEvent(eventName:String, arg0, arg1 = null):void
-		{	
-			ExternalInterface.call("Recorder.triggerEvent", eventName, arg0, arg1);
+		protected function triggerEvent(eventName:String, arg0, arg1 = null, arg2 = null):void
+		{
+			ExternalInterface.call("Recorder.triggerEvent", eventName, arg0, arg1, arg2);
 		}
 	}
 }
