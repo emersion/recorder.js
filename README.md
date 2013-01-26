@@ -44,12 +44,15 @@ Once the actual recording starts an onRecording callback that you can pass to as
 Usage:
 
       Recorder.record({
-        start: function(){                 // will be called when the recording started 
-                                           // which could be delayed because Adobe Flash asks the user for microphone access permission
-        }
-        progress: function(milliseconds){  // will be called in a <1s frequency with the current position in milliseconds
+        start: function(channels, sampleRate, bufferLength) { // will be called when the recording started 
+          // which could be delayed because Adobe Flash asks the user for microphone access permission
+        },
+        progress: function(milliseconds, activityLevel) {  // will be called in a <1s frequency with the current position in milliseconds
           
         },
+        audioAvailable: function(frameBuffer, milliseconds) { // will be called when audio is available
+          
+        }
       });
 
 ### Recorder.play(options)
